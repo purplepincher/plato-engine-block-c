@@ -1,0 +1,24 @@
+# Binaries
+plato_engine
+plato_server
+test_engine
+test_protocol
+test_history
+minimal
+alarm_demo
+multi_sensor
+
+# Objects
+*.o
+*.obj
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
