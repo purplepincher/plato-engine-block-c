@@ -7,6 +7,8 @@ test_history
 minimal
 alarm_demo
 multi_sensor
+symmetry_demo
+client
 
 # Objects
 *.o

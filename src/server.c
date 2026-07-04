@@ -200,6 +200,9 @@ int main(int argc, char **argv) {
                 if (strlen(line) == 0) { line = nl + 1; continue; }
 
                 if (strcmp(line, "quit") == 0) {
+                    /* spec: reply "bye" then close the connection */
+                    const char *bye = "bye\n";
+                    send(clients[i].fd, bye, strlen(bye), MSG_NOSIGNAL);
                     close(clients[i].fd);
                     clients[i].fd = -1;
                     clients[i].subscribed = false;

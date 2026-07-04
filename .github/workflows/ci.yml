@@ -5,8 +5,29 @@ on:
   pull_request:
     branches: [ main, master ]
 jobs:
-  test:
+  build-and-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: echo "No CI configured — customize per project requirements"
+
+      - name: Build and run unit tests
+        run: make test
+
+      - name: Build binaries and examples
+        run: make all examples
+
+      - name: Client/server integration smoke test
+        run: |
+          ./plato_server 7070 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          for i in $(seq 1 50); do
+            if ./client 127.0.0.1 7070 >/tmp/client.out 2>&1; then
+              cat /tmp/client.out
+              exit 0
+            fi
+            sleep 0.1
+          done
+          echo "::error::client never connected successfully"
+          cat /tmp/client.out 2>/dev/null || true
+          exit 1

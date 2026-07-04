@@ -1,6 +1,6 @@
 # Plato Wire Protocol Specification
 
-> Version 1.0 — June 2026
+> Version 1.1 — July 2026
 
 The Plato Engine Block communicates over text-based, line-delimited protocol.
 Designed for human readability, easy parsing, and telnet-friendliness.
@@ -27,6 +27,9 @@ Client                          Server
   │──── TCP Close ──────────────▶│
 ```
 
+On connect the server sends exactly one banner line. If the server is at its
+client limit it instead sends `err server full` and immediately closes.
+
 ## Commands
 
 ### `tick`
@@ -43,10 +46,23 @@ tick
 tick <number>: <sensor1>=<value1> <sensor2>=<value2> ...
 ```
 
-If any alarms fire, additional lines follow:
+For each alarm that fires this tick, an additional line follows:
 ```
 ! ALARM <name> [<severity>] <operator> <threshold>
 ```
+For a symmetry-mode alarm the severity carries a ` SYMM` suffix, e.g.
+`[WARN SYMM]`.
+
+If a `VETO`-severity alarm fired this tick, a veto line follows:
+```
+⛔ VETO ACTIVE — overridden by '<alarm name>'
+```
+
+For each registered symmetry pair, a passive-monitoring line follows:
+```
+  sym '<name>': r=<correlation> <✓|✗>
+```
+(`✓` when correlation meets the pair's threshold, `✗` otherwise.)
 
 **Example:**
 ```
@@ -102,6 +118,13 @@ ok <actuator_name>=<value>
 err unknown actuator '<name>'
 ```
 
+**Response (veto active):**
+```
+⛔ VETO BLOCKED — '<actuator_name>' overridden by '<veto source alarm>'
+```
+Any actuator write is refused while a `VETO`-severity alarm is active (see
+`veto`). The actuator's stored value is left unchanged.
+
 **Example:**
 ```
 > fan_speed 75.5
@@ -120,10 +143,16 @@ Show all registered alarms and their current state.
 alarm list
 ```
 
-**Response:**
+**Response (standard alarm):**
 ```
 alarms (<count>):
   [0] <name>  sensor=<sensor>  <operator> <threshold>  sev=<severity>  armed=<yes|no>
+```
+
+**Response (symmetry alarm):** symmetry alarms print a `SYMM` form with two
+sensors and the correlation threshold:
+```
+  [1] <name>  SYMM  sensors=<a>/<b>  thresh=<correlation>  sev=<severity>  armed=<yes|no>
 ```
 
 **Example:**
@@ -133,6 +162,44 @@ alarms (3):
   [0] overheat  sensor=cpu_temp  > 80.00  sev=CRIT  armed=yes
   [1] chilly    sensor=cpu_temp  < 50.00  sev=WARN  armed=no
   [2] lucky     sensor=random    >= 90.00  sev=INFO  armed=yes
+```
+
+### `symmetry list`
+
+Show all registered symmetry pairs and their last computed correlation.
+
+**Request:**
+```
+symmetry list
+```
+
+**Response:**
+```
+symmetry pairs (<count>):
+  [0] <name>  <sensor_a> ↔ <sensor_b>  r=<correlation>  thresh=<threshold>  <✓|✗>
+```
+
+Symmetry pairs monitor correlation between two sensor histories passively; they
+do not raise alarms on their own (use a symmetry *alarm* for that).
+
+### `veto`
+
+Show whether a veto is currently in effect (set by a `VETO`-severity alarm
+during the last `tick`).
+
+**Request:**
+```
+veto
+```
+
+**Response (veto active):**
+```
+⛔ VETO active — source: '<alarm name>' (alarm <index>)
+```
+
+**Response (no veto):**
+```
+✅ No veto active
 ```
 
 ### `subscribe`
@@ -182,6 +249,8 @@ Plato Engine Block — commands:
   history [N]     — show last N readings (default 10)
   <actuator> <v>  — set actuator to value
   alarm list      — show all alarms
+  symmetry list   — show all symmetry pairs
+  veto            — show current veto state
   subscribe       — subscribe to tick broadcasts
   unsubscribe     — stop tick broadcasts
   help            — this message
@@ -202,9 +271,9 @@ quit
 bye
 ```
 
-The server closes the connection after sending this response.
+The server sends this response and then closes the connection.
 
-### Unknown Command
+### Unknown Command / Empty Lines
 
 **Request:**
 ```
@@ -215,6 +284,9 @@ The server closes the connection after sending this response.
 ```
 err unknown command (try 'help')
 ```
+
+Blank/whitespace-only lines are ignored by the server (no response, connection
+stays open).
 
 ## Alarm Lifecycle
 
@@ -259,6 +331,7 @@ This prevents alarm spam while ensuring sustained conditions are reported.
 | `INFO` | Informational, no action needed |
 | `WARN` | Warning, investigate soon |
 | `CRIT` | Critical, immediate action required |
+| `VETO` | Veto-level; when such an alarm fires, all actuator writes are blocked until the alarm re-arms |
 
 ## Binary Representation
 
@@ -273,3 +346,4 @@ The protocol is text-only. No binary framing. This is intentional:
 | Version | Date | Changes |
 |---|---|---|
 | 1.0 | 2026-06 | Initial specification |
+| 1.1 | 2026-07 | Document `symmetry list` and `veto` commands, `VETO` severity, veto-blocked actuator response, symmetry-mode `alarm list` form, and the extra `tick` output lines (veto / per-pair symmetry). Server now sends `bye` before closing on `quit`. |

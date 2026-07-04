@@ -11,7 +11,7 @@ endif
 # Binaries
 BINS    = plato_engine plato_server
 TESTS   = test_engine test_protocol test_history
-EXAMPLES = minimal alarm_demo multi_sensor symmetry_demo
+EXAMPLES = minimal alarm_demo multi_sensor symmetry_demo client
 
 .PHONY: all test clean examples
 
@@ -63,6 +63,9 @@ multi_sensor: examples/multi_sensor.c include/plato_engine.h
 
 symmetry_demo: examples/symmetry_demo.c include/plato_engine.h
 	$(CC) $(CFLAGS) -o $@ examples/symmetry_demo.c $(LDFLAGS)
+
+client: examples/client.c include/plato_engine.h
+	$(CC) $(CFLAGS) -o $@ examples/client.c $(LDFLAGS)
 
 # ---- clean ----
 
