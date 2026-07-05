@@ -2,12 +2,13 @@
 
 > A tiny, embeddable sensor→history→alarm engine in under 400 lines of C99.
 
-The Plato Engine Block is the reference implementation of the Plato monitoring
-philosophy: **read sensors, store history, fire alarms, stream it all**. It's
-designed to run anywhere — from POSIX servers to bare-metal MCUs to game loops —
-with zero dynamic allocation after initialization.
+The Plato Engine Block is a tiny, embeddable sensor→history→alarm engine:
+**read sensors, store history, fire alarms, stream it all**. It's designed to
+run anywhere — from POSIX servers to bare-metal MCUs to game loops — with zero
+dynamic allocation after initialization.
 
-Part of the [SuperInstance](https://github.com/SuperInstance) ecosystem.
+Hosted under [purplepincher](https://github.com/purplepincher) as a standalone,
+tested C99 toolkit.
 
 ---
 
@@ -51,7 +52,7 @@ Part of the [SuperInstance](https://github.com/SuperInstance) ecosystem.
 
 ```bash
 # Clone and build
-git clone https://github.com/SuperInstance/plato-engine-block-c.git
+git clone https://github.com/purplepincher/plato-engine-block-c.git
 cd plato-engine-block-c
 make
 
@@ -297,19 +298,14 @@ No heap allocation. Everything is static.
 
 ---
 
-## SuperInstance Ecosystem
+## Scope
 
-The Plato Engine Block is the C reference implementation in the SuperInstance
-monitoring and automation ecosystem:
-
-- **plato-engine-block-c** (this repo) — C reference, bare-metal ready
-- **plato-engine-block** — TypeScript/Node.js implementation for servers
-- **plato-protocol** — Wire protocol specification and validators
-- **SuperInstance** — Orchestration layer for managing multiple engine blocks
-
-The C implementation proves the concept runs with minimal resources while
-maintaining the full protocol surface. Port it to any platform, connect it
-to any transport — the engine doesn't care.
+This repo is a single, self-contained C99 implementation. It exposes a small
+sensor/actuator/alarm engine and a text protocol over stdin and TCP. It does not
+include a server-side orchestration layer, a TypeScript port, or a separate
+protocol specification — those would be additional projects if they are ever
+needed. The engine is intentionally small so it can be ported to any platform
+and connected to any transport.
 
 ---
 
