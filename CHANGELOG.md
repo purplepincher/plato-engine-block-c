@@ -5,13 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 > **Versioning note.** `plato-engine-block-c` is a single-header C99 library
-> with no package manifest, so versioning is git-tag-only. **No git tags exist
-> yet**, so no version has been released and every change below is documented
-> under `[Unreleased]` pending the first tag. The header comment and
-> `PLATO_PROTOCOL.md` refer to a "TernARY v1.1" revision — that is a
-> feature/protocol identifier, not a release tag.
+> with no package manifest, so versioning is git-tag-only. This is the first
+> tagged release. The header comment and `PLATO_PROTOCOL.md` refer to a
+> "TernARY v1.1" revision — that is a feature/protocol identifier, not a
+> release tag.
 
-## [Unreleased]
+## [0.1.0] - 2026-07-06
 
 ### Added
 - Initial reference implementation of the Plato Engine Block as a single-header C99 library (`include/plato_engine.h`): a sensor→history→alarm engine with per-sensor ring-buffer history, threshold alarms (`>`/`<`/`>=`/`<=`/`==`) with post-fire cooldown, a line-delimited text command protocol via `plato_handle_command()`, and a POSIX `poll()`-based TCP server (`src/server.c`) with subscriber tick broadcasts. Ships demo sensors (`src/sensors_dummy.c`), an interactive stdin daemon (`src/main.c`), a `Makefile`, MIT license, unit tests (`tests/test_engine.c`, `tests/test_history.c`, `tests/test_protocol.c`), and the `minimal`, `alarm_demo`, and `multi_sensor` examples. ([1f640ce])
