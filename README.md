@@ -91,6 +91,53 @@ bye
 
 No dynamic allocation occurs after `plato_init()`; all state lives in the caller-allocated `plato_engine_t` struct.
 
+No dynamic allocation occurs after `plato_init()`; all state lives in the caller-allocated `plato_engine_t` struct.
+
+## Status & capabilities
+
+Everything below was verified by building the library (`make`), running the
+test suite (`make test` — **35/35 tests pass**: 14 engine, 14 protocol, 7
+history), and driving both `plato_engine` and `plato_server` over stdin/TCP.
+
+- ✅ **Single-header C99 library** (`include/plato_engine.h`) — compile into
+  one `.c` file via `#define PLATO_ENGINE_IMPL`. No heap allocation after init.
+- ✅ **Sensor → history → alarm pipeline:** `plato_tick()` reads all sensors,
+  pushes into per-sensor ring buffers, evaluates threshold alarms, and checks
+  symmetry pairs.
+- ✅ **Threshold alarms** with `>`, `<`, `>=`, `<=`, `==`, a fire-then-cooldown
+  lifecycle (`PLATO_ALARM_COOLDOWN`), and `INFO`/`WARN`/`CRIT` severities.
+- ✅ **Symmetry monitoring:** cross-correlation between sensor pairs
+  (`plato_add_symmetry_pair`) and symmetry *alarms* that fire when two sensors
+  decouple (`plato_add_symmetry_alarm`).
+- ✅ **Veto system:** a `PLATO_VETO`-severity alarm blocks **all** actuator
+  writes while it is firing (verified in `plato_engine.h` and the symmetry demo).
+- ✅ **Ternary-Continuous shim:** conviction `[0,1]` ↔ trit `{-1,0,+1}` via a
+  Leminal-zone deadband (`plato_conviction_to_trit`).
+- ✅ **Text protocol:** `plato_handle_command()` parses line-delimited commands
+  (`tick`, `history`, `<actuator> <value>`, `alarm list`, `symmetry list`,
+  `veto`, `subscribe`, `unsubscribe`, `help`, `quit`).
+- ✅ **Two demo binaries:** `plato_engine` (stdin daemon, `-a N` auto-tick) and
+  `plato_server` (POSIX `poll()`-based TCP server, default port 7070).
+- ✅ **Examples** in `examples/`: `minimal`, `alarm_demo`, `multi_sensor`,
+  `symmetry_demo`, `client`.
+
+### What it does NOT do (yet)
+
+- 🔮 **No persistence.** History, alarms, and engine state are in-RAM only;
+  there is no save/restore or journaling. `memory/JOURNAL.md` is an agent
+  notebook, not a runtime data store.
+- 🔮 **No thread safety.** Single-threaded by design; the host must serialize
+  concurrent access (e.g. lock around `plato_tick`/`plato_handle_command`).
+- 🔮 **No binary protocol, encryption, or auth.** The wire format is plaintext
+  UTF-8 lines — fine for a trusted/serial link, not for an untrusted network.
+- 🔮 **No real sensor drivers.** `src/sensors_dummy.c` ships simulated sensors
+  (`cpu_temp`, `random`, `constant`); you must wire your own `plato_sensor_fn`.
+- 🔮 **No actuator range enforcement.** The engine calls your write callback with
+  whatever value it is given — clamping/limits are the host's responsibility.
+- 🔮 **TCP server is POSIX-only** (`poll`/`socket`/`inet_ntop`); the header
+  library itself is portable C99, but `plato_server` won't build on bare metal
+  or non-POSIX hosts.
+
 ## Configuration and options
 
 Include the header in one translation unit with the implementation macro:

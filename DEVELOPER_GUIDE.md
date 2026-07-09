@@ -104,7 +104,12 @@ Override constants before including the header:
 #include "plato_engine.h"
 ```
 
-With these settings, `sizeof(plato_engine_t)` drops to ~300 bytes.
+With these settings, `sizeof(plato_engine_t)` is **~2.3 KB** (measured:
+2272 bytes with exactly the overrides above; the default configuration is
+~35 KB / 36144 bytes). The bulk is the per-sensor history ring buffers —
+`sensors × PLATO_MAX_HISTORY × sizeof(double)` — so reducing history depth is
+the most effective lever. (Note: `PLATO_MAX_SYMMETRY_PAIRS` is not overridden
+in the snippet above; lower it too if you also drop symmetry monitoring.)
 
 ### Testing Strategy
 
